@@ -553,8 +553,12 @@ export type HttpServerHandle = {
 export async function startMcpHttpServer(port: number, options?: { quiet?: boolean }): Promise<HttpServerHandle> {
   const store = createStore();
   const mcpServer = createMcpServer(store);
+  // Disable session management so each request is independent.
+  // With sessions enabled, clients must track Mcp-Session-Id headers and
+  // only one initialize is allowed per transport — causing "already initialized"
+  // or "session ID required" errors for stateless callers.
   const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: () => randomUUID(),
+    sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
   await mcpServer.connect(transport);
